@@ -1,0 +1,124 @@
+#include<iostream>
+#include<cstdio>
+#include<mysql.h>
+#include<my_global.h>
+#include<stdlib.h>
+#include<conio.h>
+#define HOST "127.0.0.1"//연결할 host 주소
+#define USER "root"//사용자이름
+#define PASS "1234"//패스워드
+#define NAME "test"//접속할 데이터베이스 이름
+#define POTE 3306//포트
+#define CHOP(x) x[strlen(x)-1]=' '
+using namespace std;
+int main()
+{
+	char query[255];//쿼리
+	int len;
+	MYSQL *conn_ptr; //MYSQL과의 연결담당
+	MYSQL_RES *res;//쿼리에대한 결과를 받는 변수
+	MYSQL_ROW row;//쿼리에대한 실제데이터 값이 들어있는 변수
+	conn_ptr = mysql_init(NULL);//초기화
+	if (!conn_ptr)
+	{
+		printf("mysql_init failed!!\n");
+	}
+	/*mysql에 연결*/
+	conn_ptr = mysql_real_connect(conn_ptr, HOST, USER, PASS, NAME, POTE, (char*)NULL, 0);
+	if (conn_ptr)
+	{
+		printf("연결성공\n");
+		mysql_query(conn_ptr, "set names euckr");
+	}
+	else
+		printf("실패패패패\n");
+	printf("mariadb client version : %s\n", mysql_get_client_info());
+
+
+	char n[50];
+	int a=0;
+	char id[50];
+	char ps[50];
+	char psw;
+	printf("-------회원가입-------\n");
+	
+	printf("이름 : ");
+	scanf("%s", n);
+	
+
+	printf("나이 : ");
+	scanf("%d", &a);
+
+	printf("ID : ");
+	scanf("%s", id);
+
+	printf("PASSWORD : ");
+	for (int i = 0;;)
+	{
+		psw = getch();
+		if ((psw >= 'a'&&psw <= 'z') || (psw >= 'A'&&psw <= 'Z') || (psw >= '0'&&psw <= '9'))
+		{
+			ps[i] = psw;
+			++i;
+			cout << "*";
+		}
+		if (psw == '\b'&&i >= 1)//backspace눌렀을때
+		{
+			cout << "\b \b";
+			--i;
+		}
+		if (psw == '\r')//enter눌렀을때(입력종료)
+		{
+			ps[i] = '\0';
+			break;
+		}
+
+	}
+	printf("\n");
+	sprintf(query, "insert into test_table values ('%s','%d','%s','%s')", n, a, id, ps);
+	len=mysql_query(conn_ptr, query);//쿼리실행
+
+	/*printf("save ->\n");
+	sprintf(query,"select *from test_table");
+	len = mysql_query(conn_ptr, query);
+	res = mysql_store_result(conn_ptr);
+	while ((row = mysql_fetch_row(res)) != null)
+	{
+		printf("%s %s %s %s\n", row[0], row[1], row[2],row[3]);
+	}*/
+
+	while (1)
+	{
+		char i[50];
+		char p[50];
+		printf("-----------로그인------------\n");
+		printf("ID : ");
+		scanf("%s", i);
+		printf("PASSWORD : ");
+		scanf("%s", p);
+
+		sprintf(query, "select PASSWORD from test_table where ID='%s'", i);
+		len = mysql_query(conn_ptr, query);//쿼리실행
+		res = mysql_store_result(conn_ptr);//실행한 쿼리의값
+		if (res->row_count == 0)
+		{
+			printf("존재하지 않는 아이디임\n");
+			continue;
+		}
+		
+		while ((row = mysql_fetch_row(res)) != NULL)
+		{
+			if (strcmp(row[0],p)==0)
+			{
+				printf("로그인성공!\n");
+				return 0;
+			}
+		}
+		printf("비밀번호가 틀렸쪄염\n");
+	}
+
+	mysql_free_result(res);
+	mysql_close(conn_ptr);
+	return 0;
+
+}
